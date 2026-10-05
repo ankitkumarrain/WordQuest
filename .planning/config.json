@@ -1,0 +1,19 @@
+{
+  "project_name": "WordQuest",
+  "version": "1.0.0",
+  "workflow": {
+    "auto_advance": false,
+    "strict_gates": true,
+    "verify_uat": true,
+    "plan_review_convergence": false
+  },
+  "stack": {
+    "framework": "Expo SDK 57 (React Native 0.86)",
+    "router": "Expo Router",
+    "language": "TypeScript (strict)",
+    "state": "Zustand",
+    "database": "expo-sqlite",
+    "cloud": "Firebase Auth & Firestore",
+    "monetization": "Google AdMob"
+  }
+}

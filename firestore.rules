@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the caller is authenticated and owns the resource
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // User document path: /users/{userId}
+    match /users/{userId} {
+      // User can read and write only their own root profile and sync snapshot
+      allow read, write: if isOwner(userId);
+
+      // Sub-collection for idempotent virtual reward ledger: /users/{userId}/grants/{grantId}
+      match /grants/{grantId} {
+        // Can read grants belonging to this user
+        allow read: if isOwner(userId);
+        
+        // Append-only: Can create a new grant once with unique grantId, but cannot modify or delete
+        allow create: if isOwner(userId) &&
+                         request.resource.data.grantId == grantId &&
+                         request.resource.data.amount is number &&
+                         request.resource.data.amount >= 0 &&
+                         request.resource.data.rewardType is string &&
+                         request.resource.data.source is string &&
+                         !exists(/databases/$(database)/documents/users/$(userId)/grants/$(grantId));
+        
+        // Prevent grant tampering, reversal, or coin duplication
+        allow update, delete: if false;
+      }
+    }
+
+    // Default deny for all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
